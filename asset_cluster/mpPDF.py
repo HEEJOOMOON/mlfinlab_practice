@@ -78,13 +78,6 @@ def deNoiseCov(cov0, q, bWidth):
     cov1 = corr2cov(corr1, np.diag(cov0)**.5)
     return cov1
 
-def optPort(cov, mu=None):
-    inv = np.linalg.inv(cov)
-    ones = np.ones(shape=(inv.shape[0],1))
-    if mu is None: mu=ones
-    w = np.dot(inv, mu)
-    w /= np.dot(ones.T, w)
-    return w
 
 def empirical_denoising(returns: pd.DataFrame,
                         q: float,

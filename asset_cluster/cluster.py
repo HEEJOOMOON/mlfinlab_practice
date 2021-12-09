@@ -80,18 +80,3 @@ def asset_clustering(df: pd.DataFrame,
                      ):
 
     return None
-
-if __name__ == '__main__':
-    from mpPDF import *
-    import seaborn as sns
-    import matplotlib.pyplot as plt
-    from data import choose_stocks
-
-    choose_stocks(100)
-    df = pd.read_csv('data/snp_close.csv', index_col='Date')
-    returns = df.pct_change().dropna()
-    q = len(returns.index) / len(returns.columns)
-    corr = empirical_denoising(returns, q=q, metrics='corr')
-    corr_, cluster_, _ = clusterKMeansTop(corr, maxNumClusters=10)
-    sns.heatmap(corr_)
-    plt.show()
