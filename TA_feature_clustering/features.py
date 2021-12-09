@@ -52,7 +52,18 @@ def volatility(series: pd.DataFrame,
 def price_overlap(series: pd.DataFrame):
 
     df = pd.DataFrame()
-
+    df['sma_20'] = df.close.rolling(20).mean()
+    df['wma_20'] = ta.wma(df.close, length=20)
+    df['ema_20'] = ta.ema(df.close, length=20)
+    df['sma_60'] = df.close.rolling(60).mean()
+    df['wma_60'] = ta.wma(df.close, length=60)
+    df['ema_60'] = ta.ema(df.close, length=60)
+    df['sma_120'] = df.close.rolling(120).mean()
+    df['wma_120'] = ta.wma(df.close, length=120)
+    df['ema_120'] = ta.ema(df.close, length=120)
+    df['roc_20'] = ta.roc(df.close, length=20)
+    df['roc_60'] = ta.roc(df.close, length=60)
+    df['roc_120'] = ta.roc(df.close, length=120)
     return df
 
 
