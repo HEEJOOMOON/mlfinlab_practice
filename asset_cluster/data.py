@@ -1,7 +1,7 @@
 import pandas as pd
 import FinanceDataReader as fdr
 
-def choose_stocks(stocks: list,
+def download(stocks: list,
                   close: bool=True,
                   volume: bool=False,
                   start_date='2017-01-01',
