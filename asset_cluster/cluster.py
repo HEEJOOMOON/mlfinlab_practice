@@ -4,12 +4,26 @@ from sklearn.metrics import silhouette_samples
 from metrics import *
 from mpPDF import *
 from utils import *
+from typing import Union
 
 # © 2020 Machine Learning for Asset Managers, Marcos Lopez de Prado
 
-def clusterKMeansBase(corr0, maxNumClusters=10, n_init=10):
-    x, silh = ((1-corr0.fillna(0))/2.0)**0.5, pd.Series(dtype='float64')
-    x.fillna(0, inplace=True)
+def clusterKMeansBase(metrics: str,
+                      matrix: Union[pd.Series, pd.DataFrame], 
+                      maxNumClusters: int=10,
+                      n_init: int=10):
+    '''
+    
+    :param metrics: (str) 'corr', 'mutual' or 'variation'
+    :param matrix: (pd.Series or pd.DataFrame)
+    :param maxNumClusters: 
+    :param n_init: 
+    :return: 
+    '''
+    
+    if metrics=='corr':
+        x, silh = ((1-matrix.fillna(0))/2.0)**0.5, pd.Series(dtype='float64')
+        x.fillna(0, inplace=True)
     for init in range(n_init):
         for i in range(2, maxNumClusters+1):
             kmeans_ = KMeans(n_clusters=i, n_init=1)
@@ -20,15 +34,15 @@ def clusterKMeansBase(corr0, maxNumClusters=10, n_init=10):
                 silh, kmeans = silh_, kmeans_
 
     newIdx = np.argsort(kmeans.labels_)
-    corr1 = corr0.iloc[newIdx]  # reorder rows
+    corr1 = matrix.iloc[newIdx]  # reorder rows
 
-    corr1 = corr0.iloc[:, newIdx]   # reorder columns
-    clstrs = {i:corr0.columns[np.where(kmeans.labels_==i)[0]].tolist() \
+    corr1 = matrix.iloc[:, newIdx]   # reorder columns
+    clstrs = {i:matrix.columns[np.where(kmeans.labels_==i)[0]].tolist() \
               for i in np.unique(kmeans.labels_)}   # cluster members: keys-clusters' labels, values-list(elements)
     silh = pd.Series(silh, index=x.index)
     return corr1, clstrs, silh
 
-def makeNewOutputs(corr0, clstrs, clstrs2):
+def makeNewOutputs(matrix, clstrs, clstrs2):
     clstrsNew = {}
     for i in clstrs.keys():
         clstrsNew[len(clstrsNew.keys())] = list(clstrs[i])
@@ -36,8 +50,8 @@ def makeNewOutputs(corr0, clstrs, clstrs2):
         clstrsNew[len(clstrsNew.keys())] = list(clstrs2[i])
 
     newIdx = [j for i in clstrsNew for j in clstrsNew[i]]
-    corrNew = corr0.loc[newIdx, newIdx]
-    x = ((1-corr0.fillna(0))/2.)**0.5
+    corrNew = matrix.loc[newIdx, newIdx]
+    x = ((1-matrix.fillna(0))/2.)**0.5
     kmeans_labels = np.zeros(len(x.columns))
 
     for i in clstrsNew.keys():
@@ -47,9 +61,9 @@ def makeNewOutputs(corr0, clstrs, clstrs2):
     silhNew = pd.Series(silhouette_samples(x, kmeans_labels), index = x.index)
     return corrNew, clstrsNew, silhNew
 
-def clusterKMeansTop(corr0, maxNumClusters=None, n_init=10):
-    if maxNumClusters==None: maxNumClusters=corr0.shape[1]-1
-    corr1, clstrs, silh = clusterKMeansBase(corr0, maxNumClusters=min(maxNumClusters, corr0.shape[1]-1), \
+def clusterKMeansTop(matrix, maxNumClusters=None, n_init=10):
+    if maxNumClusters==None: maxNumClusters=matrix.shape[1]-1
+    corr1, clstrs, silh = clusterKMeansBase(matrix, maxNumClusters=min(maxNumClusters, matrix.shape[1]-1), \
                                             n_init=n_init)
     clusterTstats = {i:np.mean(silh[clstrs[i]])/np.std(silh[clstrs[i]]) for i in clstrs.keys()}
     tStatMean = sum(clusterTstats.values()) / len(clusterTstats)
@@ -59,14 +73,14 @@ def clusterKMeansTop(corr0, maxNumClusters=None, n_init=10):
         return corr1, clstrs, silh
     else:
         keysRedo = [j for i in redoClusters for j in clstrs[i]] # redoCluster에 있는 element들의 모음
-        corrTmp = corr0.loc[keysRedo, keysRedo] # 새로 클러스터 만들 corr 새로 만들기
+        corrTmp = matrix.loc[keysRedo, keysRedo] # 새로 클러스터 만들 corr 새로 만들기
         tStatMean = np.mean([clusterTstats[i] for i in redoClusters])
         corr2, clstrs2, silh2 = clusterKMeansTop(corrTmp, \
                                                  maxNumClusters=min(maxNumClusters, \
                                                  corrTmp.shape[1]-1), n_init=n_init)    # 기준 미달 클러스터끼리 다시 클러스터 만들기
                                                                                         # 함수 안에 함수 계속 반복: K가 1일 때까지
         # Make new outputs, if necessary
-        corrNew, clstrsNew, silhNew = makeNewOutputs(corr0,\
+        corrNew, clstrsNew, silhNew = makeNewOutputs(matrix,\
                                                      {i:clstrs[i] for i in clstrs.keys() if i not in redoClusters}, \
                                                      clstrs2)       # 이미 선택된 것과 새로 선택된 것으로 다시 corr 등 만들기
         newTstatMean = np.mean([np.mean(silhNew[clstrsNew[i]])/ \
