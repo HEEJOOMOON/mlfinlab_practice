@@ -1,9 +1,9 @@
 import numpy as np, pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_samples
-from metrics import *
-from mpPDF import *
-from utils import *
+from asset_cluster.metrics import *
+from asset_cluster.mpPDF import *
+from asset_cluster.utils import *
 from typing import Optional
 
 # © 2020 Machine Learning for Asset Managers, Marcos Lopez de Prado

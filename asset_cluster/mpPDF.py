@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 from sklearn.neighbors import KernelDensity
-from utils import *
-from metrics import empirical_info
+from asset_cluster.utils import *
+from asset_cluster.metrics import empirical_info
 
 # © 2020 Machine Learning for Asset Managers, Marcos Lopez de Prado
 

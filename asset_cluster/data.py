@@ -18,15 +18,13 @@ def load_data(stocks: list,
 
     if close:
         df_close = pd.DataFrame()
-        data_close = load_data(stocks, start_date, end_date, \
-                               df_close, 'Close')
-        data_close.to_csv('close.csv')
+        _load_edata(stocks, start_date, end_date, df_close, 'Close')
+        df_close.to_csv('Datasets/close.csv')
 
     if volume:
         df_volume = pd.DataFrame()
-        data_volume = load_data(stocks, start_date, end_date, \
-                               df_volume, 'Volme')
-        data_volume.to_csv('volume.csv')
+        _load_edata(stocks, start_date, end_date, df_volume, 'Volme')
+        df_volume.to_csv('Datasets/volume.csv')
 
 
 def _load_edata(list_, start_, end_, df, col):
@@ -42,5 +40,3 @@ def _load_edata(list_, start_, end_, df, col):
     for t in list_:
         tmp = fdr.DataReader(t, start=start_, end=end_)
         df[t] = tmp[col]
-
-    return df
