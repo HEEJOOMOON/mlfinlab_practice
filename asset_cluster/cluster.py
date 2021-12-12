@@ -4,26 +4,17 @@ from sklearn.metrics import silhouette_samples
 from metrics import *
 from mpPDF import *
 from utils import *
-from typing import Union
+from typing import Optional
 
 # © 2020 Machine Learning for Asset Managers, Marcos Lopez de Prado
 
-def clusterKMeansBase(metrics: str,
-                      matrix: Union[pd.Series, pd.DataFrame], 
+
+def clusterKMeansBase(matrix,
                       maxNumClusters: int=10,
                       n_init: int=10):
-    '''
-    
-    :param metrics: (str) 'corr', 'mutual' or 'variation'
-    :param matrix: (pd.Series or pd.DataFrame)
-    :param maxNumClusters: 
-    :param n_init: 
-    :return: 
-    '''
-    
-    if metrics=='corr':
-        x, silh = ((1-matrix.fillna(0))/2.0)**0.5, pd.Series(dtype='float64')
-        x.fillna(0, inplace=True)
+
+    x, silh = ((1-matrix.fillna(0))/2.0)**0.5, pd.Series(dtype='float64')
+    x.fillna(0, inplace=True)
     for init in range(n_init):
         for i in range(2, maxNumClusters+1):
             kmeans_ = KMeans(n_clusters=i, n_init=1)
@@ -41,6 +32,7 @@ def clusterKMeansBase(metrics: str,
               for i in np.unique(kmeans.labels_)}   # cluster members: keys-clusters' labels, values-list(elements)
     silh = pd.Series(silh, index=x.index)
     return corr1, clstrs, silh
+
 
 def makeNewOutputs(matrix, clstrs, clstrs2):
     clstrsNew = {}
@@ -60,6 +52,7 @@ def makeNewOutputs(matrix, clstrs, clstrs2):
 
     silhNew = pd.Series(silhouette_samples(x, kmeans_labels), index = x.index)
     return corrNew, clstrsNew, silhNew
+
 
 def clusterKMeansTop(matrix, maxNumClusters=None, n_init=10):
     if maxNumClusters==None: maxNumClusters=matrix.shape[1]-1
@@ -90,7 +83,26 @@ def clusterKMeansTop(matrix, maxNumClusters=None, n_init=10):
         else:
             return corrNew, clstrsNew, silhNew
 
+
 def asset_clustering(df: pd.DataFrame,
+                     metric: str,
+                     denosing: bool,
+                     max_num_clusters: Optional[int],
+                     n_init: int=10,
                      ):
 
-    return None
+    '''
+
+    :param df: (pd.DataFrame)
+    :param metric: (str) 'corr', 'mutual' or 'variation'
+    :return:
+    '''
+
+    if denosing:
+        matrix = empirical_denoising(df, q=len(df.columns)/len(df.index), metrics=metric)
+    else:
+        matrix = empirical_info(df, norm=True, metrics=metric)
+
+    dist_new, clstrs_new, _ = clusterKMeansTop(matrix, maxNumClusters=max_num_clusters, n_init=n_init)
+
+    return clstrs_new
