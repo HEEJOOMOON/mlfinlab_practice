@@ -100,9 +100,13 @@ def asset_clustering(df: pd.DataFrame,
 
     if denosing:
         matrix = empirical_denoising(df, q=len(df.columns)/len(df.index), metrics=metric)
-    else:
+    elif metric=='corr':
+        matrix = df.corr()
+    elif metric == 'mutual' or 'variation':
         matrix = empirical_info(df, norm=True, metrics=metric)
+    else:
+        raise KeyError("metric is 'corr' or 'mutual' or 'variation'")
 
     dist_new, clstrs_new, _ = clusterKMeansTop(matrix, maxNumClusters=max_num_clusters, n_init=n_init)
 
-    return clstrs_new
+    return dist_new, clstrs_new
