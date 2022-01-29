@@ -78,7 +78,7 @@ def features(series: pd.DataFrame,
     volatility_df = volatility(series, period)
     overlap_df = price_overlap(series)
 
-    features = pd.concat([momentum_df, trend_df, volatility_df, volume_df, overlap_df],\
+    features_ = pd.concat([momentum_df, trend_df, volatility_df, volume_df, overlap_df],\
                          join='outer', axis=1).reindex(trend_df.index).dropna()
 
-    return features
+    return features_
